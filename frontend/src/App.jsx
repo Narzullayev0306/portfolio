@@ -3,21 +3,35 @@ import './index.css'
 
 
 
+const NAV_LINKS = [
+  { id: 'about', label: 'About' },
+  { id: 'skills', label: 'Skills' },
+  { id: 'projects', label: 'Projects' },
+  { id: 'experience', label: 'Experience' },
+  { id: 'goals', label: 'Goals' },
+];
+
+const SKILL_GROUPS = [
+  { name: 'Frontend', tags: ['React', 'JavaScript', 'HTML/CSS', 'REST APIs'] },
+  { name: 'Backend', tags: ['Python', 'Node.js', 'FastAPI', 'Express'] },
+  { name: 'Database', tags: ['PostgreSQL', 'Supabase', 'SQL', 'Schema Design'] },
+  { name: 'AI / Data', tags: ['NumPy', 'Pandas', 'Scikit-learn', 'Matplotlib'] },
+  { name: 'Tools & Systems', tags: ['Git', 'GitHub', 'Linux', 'Kali Linux'] },
+  { name: 'Architecture', tags: ['MVC', 'RBAC', 'SaaS', 'Microservices', 'REST'] },
+];
+
 function App() {
-  const [isLight, setIsLight] = useState(false);
+  const [isLight, setIsLight] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    return saved ? saved === 'light' : window.matchMedia('(prefers-color-scheme: light)').matches;
+  });
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
   const [openProjects, setOpenProjects] = useState({ 'proj-1': false, 'proj-2': false, 'proj-3': false });
   const [formStatus, setFormStatus] = useState('idle'); // idle, sending, success, error
 
   useEffect(() => {
-    const saved = localStorage.getItem('theme');
-    const preferLight = saved ? saved === 'light' : window.matchMedia('(prefers-color-scheme: light)').matches;
-    setIsLight(preferLight);
-    if (preferLight) {
-      document.body.classList.add('light');
-    }
-
     const handleScroll = () => {
       const pct = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
       setScrollProgress(pct);
@@ -57,11 +71,31 @@ function App() {
     };
   }, [openProjects]);
 
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : '';
+    const onKey = (e) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    const desktopMq = window.matchMedia('(min-width: 901px)');
+    const onDesktop = (e) => {
+      if (e.matches) setMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    desktopMq.addEventListener('change', onDesktop);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', onKey);
+      desktopMq.removeEventListener('change', onDesktop);
+    };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    document.body.classList.toggle('light', isLight);
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  }, [isLight]);
+
   const toggleTheme = () => {
-    const newLight = !isLight;
-    setIsLight(newLight);
-    document.body.classList.toggle('light', newLight);
-    localStorage.setItem('theme', newLight ? 'light' : 'dark');
+    setIsLight(prev => !prev);
   };
 
   const toggleProject = (id) => {
@@ -79,7 +113,7 @@ function App() {
     const data = Object.fromEntries(formData.entries());
 
     try {
-      const response = await fetch('http://localhost:8000/api/contact', {
+      const response = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -102,19 +136,21 @@ function App() {
 
   return (
     <>
+      <a className="skip-link" href="#main">Skip to content</a>
+
       <div className="scroll-progress" id="scroll-progress" style={{ width: `${scrollProgress}%` }}></div>
 
       <nav>
         <a href="#hero" className="nav-logo">I<span>.</span></a>
         <ul className="nav-links">
-          <li><a href="#about" className={activeSection === 'about' ? 'active' : ''}>About</a></li>
-          <li><a href="#skills" className={activeSection === 'skills' ? 'active' : ''}>Skills</a></li>
-          <li><a href="#projects" className={activeSection === 'projects' ? 'active' : ''}>Projects</a></li>
-          <li><a href="#experience" className={activeSection === 'experience' ? 'active' : ''}>Experience</a></li>
-          <li><a href="#goals" className={activeSection === 'goals' ? 'active' : ''}>Goals</a></li>
+          {NAV_LINKS.map(link => (
+            <li key={link.id}>
+              <a href={`#${link.id}`} className={activeSection === link.id ? 'active' : ''}>{link.label}</a>
+            </li>
+          ))}
         </ul>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button className="theme-toggle" id="theme-toggle" title="Toggle theme" onClick={toggleTheme}>
+        <div className="nav-actions">
+          <button className="theme-toggle" id="theme-toggle" aria-label="Toggle color theme" onClick={toggleTheme}>
             {!isLight ? (
               <svg id="theme-icon-dark" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
             ) : (
@@ -122,8 +158,39 @@ function App() {
             )}
           </button>
           <a href="#contact" className="nav-cta">Contact →</a>
+          <button
+            type="button"
+            className={`nav-toggle${menuOpen ? ' open' : ''}`}
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
+            onClick={() => setMenuOpen(o => !o)}
+          >
+            <span className="nav-toggle-bar"></span>
+            <span className="nav-toggle-bar"></span>
+            <span className="nav-toggle-bar"></span>
+          </button>
         </div>
       </nav>
+
+      <div id="mobile-menu" className={`mobile-menu${menuOpen ? ' open' : ''}`}>
+        <ul className="mobile-links">
+          {NAV_LINKS.map((link, i) => (
+            <li key={link.id} style={{ transitionDelay: menuOpen ? `${0.05 + i * 0.04}s` : '0s' }}>
+              <a
+                href={`#${link.id}`}
+                className={activeSection === link.id ? 'active' : ''}
+                onClick={() => setMenuOpen(false)}
+              >
+                {link.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+        <a href="#contact" className="mobile-menu-cta" onClick={() => setMenuOpen(false)}>Contact →</a>
+      </div>
+
+      <main id="main">
 
       <section id="hero">
         <div className="hero-grid"></div>
@@ -133,11 +200,11 @@ function App() {
         <div className="hero-content">
           <div className="hero-tag">Available for opportunities</div>
           <h1 className="hero-name">Islom<br /><span>Narzullayev</span></h1>
-          <p className="hero-title">Full-Stack Developer · <span className="highlight">Backend & AI Systems</span></p>
-          <p className="hero-desc">Building scalable backend systems, AI-integrated enterprise platforms, and robust database architectures. Focused on real-world software that solves real problems.</p>
+          <p className="hero-title">Full-Stack Developer · <span className="highlight">Backend &amp; AI Systems</span></p>
+          <p className="hero-desc">I build scalable backend systems and AI-integrated platforms that real organizations run on — from document automation at East Telecom to a full university LMS.</p>
           <div className="hero-actions">
-            <a href="#projects" className="btn-primary">View Projects →</a>
-            <a href="#contact" className="btn-outline">Get in touch</a>
+            <a href="#projects" className="btn-primary">View My Work →</a>
+            <a href="#contact" className="btn-outline">Let&apos;s Connect</a>
           </div>
           <div className="hero-stats">
             <div className="stat-item">
@@ -173,9 +240,9 @@ function App() {
         </div>
         <div className="about-grid">
           <div className="about-text reveal reveal-delay-1">
-            <p>I&apos;m a <strong>backend-focused full-stack developer</strong> with deep experience in building enterprise-grade software systems from the ground up — not just prototypes, but production systems used in real organizations.</p>
-            <p>My work spans <strong>document automation, learning management, and CRM systems</strong> — always with a focus on clean architecture, scalable databases, and meaningful AI integration.</p>
-            <p>I approach every project as an <strong>engineering problem first</strong>: understand the system requirements, design the data model, then build with precision. The frontend follows the backend&apos;s lead.</p>
+            <p>I got into engineering because I wanted to understand how <strong>real systems work</strong> — not demo projects, but the software organizations depend on every day. That curiosity pulled me toward the backend, where systems are actually won or lost.</p>
+            <p>Today I build exactly that: <strong>document automation, learning management and CRM platforms</strong> used by real teams — designed around clean architecture, scalable databases, and AI that earns its place instead of decorating a feature list.</p>
+            <p>I treat every project as an <strong>engineering problem first</strong>: understand the requirements, design the data model, then build with precision. That discipline is what I bring to every team I join.</p>
             <div className="about-features">
               <div className="about-feature">
                 <div className="about-feature-icon">
@@ -244,63 +311,18 @@ function App() {
           <p className="section-num">02 — Skills</p>
           <h2 className="section-title">Technical<br /><span>arsenal.</span></h2>
         </div>
-        <div className="skills-grid">
-          <div className="skill-category reveal reveal-delay-1">
-            <div className="skill-cat-title">Frontend</div>
-            <div className="skill-tags">
-              <span className="skill-tag">React</span>
-              <span className="skill-tag">JavaScript</span>
-              <span className="skill-tag">HTML/CSS</span>
-              <span className="skill-tag">REST APIs</span>
+        <div className="skills-rows">
+          {SKILL_GROUPS.map((group, i) => (
+            <div className={`skill-row reveal reveal-delay-${(i % 5) + 1}`} key={group.name}>
+              <div className="skill-row-head">
+                <span className="skill-row-num">{String(i + 1).padStart(2, '0')}</span>
+                <h3 className="skill-row-name">{group.name}</h3>
+              </div>
+              <ul className="skill-list">
+                {group.tags.map(tag => <li key={tag}>{tag}</li>)}
+              </ul>
             </div>
-          </div>
-          <div className="skill-category reveal reveal-delay-2">
-            <div className="skill-cat-title">Backend</div>
-            <div className="skill-tags">
-              <span className="skill-tag">Node.js</span>
-              <span className="skill-tag">Python</span>
-              <span className="skill-tag">Express</span>
-              <span className="skill-tag">FastAPI</span>
-            </div>
-          </div>
-          <div className="skill-category reveal reveal-delay-3">
-            <div className="skill-cat-title">Database</div>
-            <div className="skill-tags">
-              <span className="skill-tag">PostgreSQL</span>
-              <span className="skill-tag">Supabase</span>
-              <span className="skill-tag">SQL</span>
-              <span className="skill-tag">Schema Design</span>
-            </div>
-          </div>
-          <div className="skill-category reveal reveal-delay-4">
-            <div className="skill-cat-title">AI / Data</div>
-            <div className="skill-tags">
-              <span className="skill-tag">NumPy</span>
-              <span className="skill-tag">Pandas</span>
-              <span className="skill-tag">Scikit-learn</span>
-              <span className="skill-tag">Matplotlib</span>
-              <span className="skill-tag">Seaborn</span>
-            </div>
-          </div>
-          <div className="skill-category reveal reveal-delay-5">
-            <div className="skill-cat-title">Tools & Systems</div>
-            <div className="skill-tags">
-              <span className="skill-tag">GitHub</span>
-              <span className="skill-tag">Linux</span>
-              <span className="skill-tag">Git</span>
-              <span className="skill-tag">Kali Linux</span>
-            </div>
-          </div>
-          <div className="skill-category reveal reveal-delay-1">
-            <div className="skill-cat-title">Architecture</div>
-            <div className="skill-tags">
-              <span className="skill-tag">MVC</span>
-              <span className="skill-tag">RBAC</span>
-              <span className="skill-tag">SaaS</span>
-              <span className="skill-tag">Microservices</span>
-              <span className="skill-tag">REST</span>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
@@ -313,23 +335,53 @@ function App() {
         </div>
         <div className="projects-list">
 
-          <div className={`project-item reveal ${openProjects['proj-1'] ? 'open' : ''}`} id="proj-1">
-            <div className="project-header" onClick={() => toggleProject('proj-1')}>
-              <span className="project-num">01</span>
-              <div className="project-meta">
-                <div className="project-name">ET-Management System</div>
-                <div className="project-brief">Enterprise AI document processing · East Telecom internal platform</div>
+          <article className={`project-card reveal ${openProjects['proj-1'] ? 'open' : ''}`} id="proj-1">
+            <div className="project-media-row">
+              <div className="project-preview">
+                <div className="browser-bar" aria-hidden="true">
+                  <span className="browser-dot red"></span>
+                  <span className="browser-dot yellow"></span>
+                  <span className="browser-dot green"></span>
+                  <span className="browser-title">et-management · internal platform</span>
+                </div>
+                <div className="preview-canvas canvas-et" aria-hidden="true">
+                  <div className="pv-glow"></div>
+                  <div className="pv-side"><i></i><i></i><i></i><i></i><i></i></div>
+                  <div className="pv-main">
+                    <div className="pv-topbar"></div>
+                    <div className="pv-cards"><span className="pv-card"></span><span className="pv-card"></span><span className="pv-card"></span></div>
+                    <div className="pv-lines"><i className="w95"></i><i className="w80"></i><i className="w70"></i><i className="w85"></i><i className="w55"></i></div>
+                  </div>
+                </div>
               </div>
-              <div className="project-stack">
-                <span className="stack-badge">Python</span>
-                <span className="stack-badge">JavaScript</span>
-                <span className="stack-badge">PostgreSQL</span>
-                <span className="stack-badge">AI</span>
+              <div className="project-info">
+                <div className="project-headrow">
+                  <span className="project-num">01</span>
+                  <span className="project-status">Completed</span>
+                </div>
+                <h3 className="project-name">ET-Management System</h3>
+                <p className="project-goal">Enterprise AI document processing — replacing manual contract workflows at East Telecom.</p>
+                <p className="project-desc">AI-powered PDF scanning, structured data extraction and a RU ↔ EN translation pipeline, wrapped in an RBAC admin dashboard with contract analytics.</p>
+                <div className="project-stack">
+                  <span className="stack-badge">Python</span>
+                  <span className="stack-badge">JavaScript</span>
+                  <span className="stack-badge">PostgreSQL</span>
+                  <span className="stack-badge">AI</span>
+                </div>
+                <button
+                  type="button"
+                  className="case-toggle"
+                  aria-expanded={!!openProjects['proj-1']}
+                  aria-controls="proj-1-body"
+                  onClick={() => toggleProject('proj-1')}
+                >
+                  {openProjects['proj-1'] ? 'Hide Case Study' : 'Read Case Study'}
+                  <span className="case-arrow" aria-hidden="true">{openProjects['proj-1'] ? '↑' : '↓'}</span>
+                </button>
+                <p className="project-note">Deployed internally at East Telecom · code proprietary</p>
               </div>
-              <div className="project-arrow">↓</div>
             </div>
-            <div className="project-body" style={{ display: openProjects['proj-1'] ? 'block' : 'none' }}>
-              <span className="project-status">Completed</span>
+            <div className="project-body" id="proj-1-body" style={{ display: openProjects['proj-1'] ? 'block' : 'none' }}>
               <div className="project-case">
                 <div className="case-block">
                   <h4>Problem</h4>
@@ -380,25 +432,56 @@ function App() {
                 <span className="tech-pill">RBAC</span>
               </div>
             </div>
-          </div>
+          </article>
 
-          <div className={`project-item reveal reveal-delay-1 ${openProjects['proj-2'] ? 'open' : ''}`} id="proj-2">
-            <div className="project-header" onClick={() => toggleProject('proj-2')}>
-              <span className="project-num">02</span>
-              <div className="project-meta">
-                <div className="project-name">University LMS System</div>
-                <div className="project-brief">Full-scale learning management platform · University operations</div>
+          <article className={`project-card reveal reveal-delay-1 ${openProjects['proj-2'] ? 'open' : ''}`} id="proj-2">
+            <div className="project-media-row">
+              <div className="project-preview">
+                <div className="browser-bar" aria-hidden="true">
+                  <span className="browser-dot red"></span>
+                  <span className="browser-dot yellow"></span>
+                  <span className="browser-dot green"></span>
+                  <span className="browser-title">university-lms · web platform</span>
+                </div>
+                <div className="preview-canvas canvas-lms" aria-hidden="true">
+                  <div className="pv-glow"></div>
+                  <div className="pv-side"><i></i><i></i><i></i><i></i><i></i></div>
+                  <div className="pv-main">
+                    <div className="pv-topbar"></div>
+                    <div className="pv-grid">
+                      <span></span><span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="project-stack">
-                <span className="stack-badge">Node.js</span>
-                <span className="stack-badge">React</span>
-                <span className="stack-badge">PostgreSQL</span>
-                <span className="stack-badge">Supabase</span>
+              <div className="project-info">
+                <div className="project-headrow">
+                  <span className="project-num">02</span>
+                  <span className="project-status">Completed</span>
+                </div>
+                <h3 className="project-name">University LMS System</h3>
+                <p className="project-goal">Full-scale learning management platform built to replace an outdated, fragmented university system.</p>
+                <p className="project-desc">Four-tier role system (Admin / Professor / Student / Guest), course management with automated enrollment and conflict detection, plus a public portal — built by a team of 4.</p>
+                <div className="project-stack">
+                  <span className="stack-badge">Node.js</span>
+                  <span className="stack-badge">React</span>
+                  <span className="stack-badge">PostgreSQL</span>
+                  <span className="stack-badge">Supabase</span>
+                </div>
+                <button
+                  type="button"
+                  className="case-toggle"
+                  aria-expanded={!!openProjects['proj-2']}
+                  aria-controls="proj-2-body"
+                  onClick={() => toggleProject('proj-2')}
+                >
+                  {openProjects['proj-2'] ? 'Hide Case Study' : 'Read Case Study'}
+                  <span className="case-arrow" aria-hidden="true">{openProjects['proj-2'] ? '↑' : '↓'}</span>
+                </button>
+                <p className="project-note">Team of 4 developers · full academic lifecycle</p>
               </div>
-              <div className="project-arrow">↓</div>
             </div>
-            <div className="project-body" style={{ display: openProjects['proj-2'] ? 'block' : 'none' }}>
-              <span className="project-status">Completed</span>
+            <div className="project-body" id="proj-2-body" style={{ display: openProjects['proj-2'] ? 'block' : 'none' }}>
               <div className="project-case">
                 <div className="case-block">
                   <h4>Problem</h4>
@@ -447,24 +530,61 @@ function App() {
                 <span className="tech-pill">REST API</span>
               </div>
             </div>
-          </div>
+          </article>
 
-          <div className={`project-item reveal reveal-delay-2 ${openProjects['proj-3'] ? 'open' : ''}`} id="proj-3">
-            <div className="project-header" onClick={() => toggleProject('proj-3')}>
-              <span className="project-num">03</span>
-              <div className="project-meta">
-                <div className="project-name">CRM System</div>
-                <div className="project-brief">Course management CRM · SaaS-like architecture for educators</div>
+          <article className={`project-card reveal reveal-delay-2 ${openProjects['proj-3'] ? 'open' : ''}`} id="proj-3">
+            <div className="project-media-row">
+              <div className="project-preview">
+                <div className="browser-bar" aria-hidden="true">
+                  <span className="browser-dot red"></span>
+                  <span className="browser-dot yellow"></span>
+                  <span className="browser-dot green"></span>
+                  <span className="browser-title">crm · saas dashboard</span>
+                </div>
+                <div className="preview-canvas canvas-crm" aria-hidden="true">
+                  <div className="pv-glow"></div>
+                  <div className="pv-side"><i></i><i></i><i></i><i></i><i></i></div>
+                  <div className="pv-main">
+                    <div className="pv-topbar"></div>
+                    <div className="pv-bars">
+                      <i style={{ height: '38%' }}></i>
+                      <i style={{ height: '58%' }}></i>
+                      <i style={{ height: '45%' }}></i>
+                      <i style={{ height: '72%' }}></i>
+                      <i style={{ height: '55%' }}></i>
+                      <i style={{ height: '88%' }}></i>
+                      <i style={{ height: '64%' }}></i>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="project-stack">
-                <span className="stack-badge">React</span>
-                <span className="stack-badge">Node.js</span>
-                <span className="stack-badge">PostgreSQL</span>
+              <div className="project-info">
+                <div className="project-headrow">
+                  <span className="project-num">03</span>
+                  <span className="project-status in-progress">In Progress</span>
+                </div>
+                <h3 className="project-name">CRM System</h3>
+                <p className="project-goal">Course management CRM giving educators centralized control over students, scheduling and payments.</p>
+                <p className="project-desc">Unified student tracking, dynamic course scheduling and a KPI analytics dashboard on a SaaS-ready multi-tenant architecture — designed to scale to multiple education centers.</p>
+                <div className="project-stack">
+                  <span className="stack-badge">React</span>
+                  <span className="stack-badge">Node.js</span>
+                  <span className="stack-badge">PostgreSQL</span>
+                </div>
+                <button
+                  type="button"
+                  className="case-toggle"
+                  aria-expanded={!!openProjects['proj-3']}
+                  aria-controls="proj-3-body"
+                  onClick={() => toggleProject('proj-3')}
+                >
+                  {openProjects['proj-3'] ? 'Hide Case Study' : 'Read Case Study'}
+                  <span className="case-arrow" aria-hidden="true">{openProjects['proj-3'] ? '↑' : '↓'}</span>
+                </button>
+                <p className="project-note">Active development · SaaS-ready architecture</p>
               </div>
-              <div className="project-arrow">↓</div>
             </div>
-            <div className="project-body" style={{ display: openProjects['proj-3'] ? 'block' : 'none' }}>
-              <span className="project-status in-progress">In Progress</span>
+            <div className="project-body" id="proj-3-body" style={{ display: openProjects['proj-3'] ? 'block' : 'none' }}>
               <div className="project-case">
                 <div className="case-block">
                   <h4>Problem</h4>
@@ -512,7 +632,7 @@ function App() {
                 <span className="tech-pill">Multi-tenant</span>
               </div>
             </div>
-          </div>
+          </article>
 
         </div>
       </section>
@@ -558,7 +678,7 @@ function App() {
 
       <div className="divider"></div>
 
-      <section id="github" style={{ padding: '80px 5%' }}>
+      <section id="github">
         <div className="github-card reveal">
           <div className="github-icon">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text2)' }}><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" /></svg>
@@ -620,8 +740,9 @@ function App() {
         <div className="contact-inner">
           <div className="section-header reveal">
             <p className="section-num">06 — Contact</p>
-            <h2 className="section-title">Let&apos;s<br /><span>connect.</span></h2>
+            <h2 className="section-title">Have a project<br /><span>in mind?</span></h2>
           </div>
+          <p className="contact-sub reveal">Let&apos;s build something useful together. Tell me about the role, the product or the problem you&apos;re solving — we&apos;ll figure out the rest.</p>
           <div className="contact-grid reveal">
             <div className="contact-card">
               <span className="contact-card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent)' }}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg></span>
@@ -642,26 +763,26 @@ function App() {
           <form className="contact-form reveal reveal-delay-1" onSubmit={handleSubmit}>
             <div className="form-row">
               <div className="form-group">
-                <label>Name</label>
-                <input type="text" name="name" placeholder="Your name" required />
+                <label htmlFor="cf-name">Name</label>
+                <input id="cf-name" type="text" name="name" placeholder="Your name" required autoComplete="name" />
               </div>
               <div className="form-group">
-                <label>Company</label>
-                <input type="text" name="company" placeholder="Your company" />
+                <label htmlFor="cf-company">Company</label>
+                <input id="cf-company" type="text" name="company" placeholder="Your company" autoComplete="organization" />
               </div>
             </div>
             <div className="form-group">
-              <label>Email</label>
-              <input type="email" name="email" placeholder="your@email.com" required />
+              <label htmlFor="cf-email">Email</label>
+              <input id="cf-email" type="email" name="email" placeholder="your@email.com" required autoComplete="email" />
             </div>
             <div className="form-group">
-              <label>Message</label>
-              <textarea name="message" placeholder="Tell me about the role or project..." required></textarea>
+              <label htmlFor="cf-message">Message</label>
+              <textarea id="cf-message" name="message" placeholder="Tell me about the role or project..." required></textarea>
             </div>
             <button
               type="submit"
-              className="btn-primary"
-              style={{ alignSelf: 'flex-start', background: formStatus === 'success' ? 'var(--green)' : formStatus === 'error' ? 'red' : '' }}
+              className={`btn-primary contact-submit${formStatus === 'sending' ? ' is-sending' : ''}`}
+              style={{ background: formStatus === 'success' ? 'var(--green)' : formStatus === 'error' ? 'red' : '' }}
               disabled={formStatus === 'sending'}
             >
               {formStatus === 'sending' ? 'Sending...' : formStatus === 'success' ? 'Message sent ✓' : formStatus === 'error' ? 'Error sending' : 'Send Message →'}
@@ -670,9 +791,11 @@ function App() {
         </div>
       </section>
 
+      </main>
+
       <footer>
-        <p>© 2025 Islom Narzullayev — Full-Stack Developer</p>
-        <p>Tashkent, Uzbekistan · Open to remote & relocation</p>
+        <p>© {new Date().getFullYear()} Islom Narzullayev — Full-Stack Developer</p>
+        <p>Tashkent, Uzbekistan · Open to remote &amp; relocation</p>
       </footer>
     </>
   )
