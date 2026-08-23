@@ -1,77 +1,90 @@
-# Portfolio
+# Islom Narzullayev — Portfolio
 
-Shaxsiy portfolio veb-sayti: **React/Vite** frontend + **FastAPI** backend + **Supabase PostgreSQL** ma'lumotlar bazasi.
+Modern, responsive personal portfolio website for **Islom Narzullayev** — Full-Stack Developer specializing in backend systems and AI integration.
 
-Vercel'da **Services** rejimida bitta proyekt sifatida deploy qilingan:
+**Live Demo → [portfolio-six-phi.vercel.app](https://portfolio-six-phi-7ekaz47rl0.vercel.app)**
 
-- Frontend: https://portfolio-six-phi-7ekaz47rl0.vercel.app
-- API: `/api/*` so'rovlar avtomatik backend service'ga yo'naltiriladi (`vercel.json` ichidagi `rewrites`)
+## Features
 
-## Loyiha tuzilishi
+- **Dark / Light mode** with system-preference detection and localStorage persistence
+- **Fully responsive** — tested from 320px phones to ultrawide desktops, hamburger navigation on mobile
+- **Interactive project showcase** — browser-style previews and expandable case studies per project
+- **Scroll-reveal animations** with full `prefers-reduced-motion` support
+- **Accessible** — semantic landmarks, skip link, keyboard-friendly menu, ARIA states
+- **Working contact form** backed by a FastAPI service and PostgreSQL (Supabase)
+- **SEO ready** — meta tags, Open Graph / Twitter cards, favicon
+
+## Tech Stack
+
+| Layer | Tools |
+|---|---|
+| Frontend | React 19, Vite 8, plain CSS (custom design system) |
+| Backend | Python, FastAPI |
+| Database | PostgreSQL (Supabase), SQLAlchemy |
+| Deployment | Vercel (frontend + serverless backend) |
+
+## Project Structure
 
 ```
-portfolio/
-├── frontend/            # React + Vite (Vercel "frontend" service)
-│   └── src/App.jsx      # Kontakt formasi /api/contact ga relative fetch qiladi
-├── backend/
-│   ├── main.py          # FastAPI ilovasi (Vercel "backend" service, entrypoint: main:app)
-│   ├── database.py      # SQLAlchemy engine + Contact modeli + jadval yaratish
-│   └── requirements.txt # Python kutubxonalari
-├── vercel.json          # Services konfiguratsiyasi + routing
-├── .env                 # Lokal maxfiy kalitlar (git-ga kirmaydi!)
-└── .env.example         # Namuna
+├── frontend/               # React SPA (Vite)
+│   ├── public/             # Static assets (profile photos, favicon)
+│   └── src/
+│       ├── components/     # One component per page section
+│       │   ├── Navbar.jsx      # Nav + mobile menu + theme toggle
+│       │   ├── Hero.jsx
+│       │   ├── About.jsx
+│       │   ├── Skills.jsx
+│       │   ├── Projects.jsx    # Showcase cards + case studies
+│       │   ├── Experience.jsx
+│       │   ├── GithubSection.jsx
+│       │   ├── Goals.jsx
+│       │   ├── Contact.jsx     # Contact form
+│       │   └── Footer.jsx
+│       ├── data/
+│       │   ├── site.js         # Nav links, skills, social links
+│       │   └── projects.js     # Project content & case studies
+│       ├── styles/             # CSS organized by concern, imported in order
+│       │   ├── variables.css   # Design tokens (colors, spacing, fonts)
+│       │   ├── base.css        # Reset, global focus, skip link
+│       │   ├── navbar.css
+│       │   ├── hero.css
+│       │   ├── sections.css
+│       │   └── responsive.css  # Media queries + reduced motion
+│       ├── App.jsx             # Composition + theme + scroll logic
+│       └── main.jsx            # Entry point
+├── backend/                # FastAPI service
+│   ├── main.py                 # API entrypoint (/api/contact)
+│   └── database.py             # SQLAlchemy models (Supabase)
+└── vercel.json             # Monorepo deploy config
 ```
 
-## Muhit o'zgaruvchilari
-
-Loyiha ildizida `.env` fayl yarating (`.env.example` dan nusxa oling):
-
-```ini
-DATABASE_URL=postgresql://USER:PASSWORD@aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres?sslmode=require
-```
-
-> Parolda maxsus belgilar bo'lsa URL'da percent-encode qiling: `@` → `%40`, `#` → `%23`.
-
-Vercel'da esa xuddi shu o'zgaruvchi Project Settings → Environment Variables bo'limida saqlanadi.
-
-## Lokal ishga tushirish
-
-### 1. Backend (port 8000)
+## Getting Started
 
 ```bash
-cd backend
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-python -m uvicorn main:app --reload --port 8000
-```
-
-### 2. Frontend (port 5173)
-
-```bash
+# 1. Frontend
 cd frontend
 npm install
-npm run dev
+npm run dev          # http://localhost:5173
+
+# 2. Backend (optional — needed only for the contact form)
+cd ../backend
+pip install -r requirements.txt
+uvicorn main:app --reload
 ```
 
-Vite `/api` so'rovlarini avtomatik `http://localhost:8000` ga proxy qiladi (`vite.config.js`).
+Environment variable for the backend:
 
-## Vercel'ga deploy qilish
-
-```bash
-npx vercel --prod
+```
+DATABASE_URL=postgresql://...   # Supabase connection string
 ```
 
-## API endpointlar
+## Author
 
-| Metod | Yo'l           | Tavsif                          |
-|-------|----------------|---------------------------------|
-| GET   | `/api/health`  | Servis holati                   |
-| POST  | `/api/contact` | Kontakt formasi xabarini DB'ga saqlash |
+**Islom Narzullayev**
 
-Jadval (`contacts`) birinchi so'rovda avtomatik yaratiladi — qo'lda SQL yozish shart emas.
+- Portfolio: [portfolio-six-phi.vercel.app](https://portfolio-six-phi-7ekaz47rl0.vercel.app)
+- GitHub: [@Narzullayev0306](https://github.com/Narzullayev0306)
+- Telegram: [@Name_N_I_N](https://t.me/Name_N_I_N)
+- Email: narzullayevislom21@gmail.com
 
-## Eslatmalar
-
-- `.env`, `venv/`, `node_modules/`, `*.log` Git-ga kirmaydi
-- Supabase shared pooler (port 6543) serverless funksiyalar uchun ishlatiladi
+Tashkent, Uzbekistan · Open to remote work and relocation.
