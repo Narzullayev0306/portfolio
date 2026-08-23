@@ -1,62 +1,77 @@
+import logging
 import os
 from contextlib import asynccontextmanager
 
 from database import Contact, engine, init_db
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
+
+logger = logging.getLogger("portfolio.api")
+logging.basicConfig(level=logging.INFO)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Cold start'da jadvallarni yaratish (idempotent)
     init_db()
     yield
 
 
-app = FastAPI(title="Portfolio API", lifespan=lifespan)
+app = FastAPI(
+    title="Portfolio API",
+    description="Backend service for the portfolio contact form. Stores messages in PostgreSQL (Supabase).",
+    version="1.1.0",
+    lifespan=lifespan,
+)
 
-# CORS: frontend boshqa domenda bo'lsa ham ishlashi uchun
+# Same-origin rewrites serve /api/* in production; CORS stays open for external clients
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
 
 class ContactForm(BaseModel):
-    name: str
-    company: str | None = None
-    email: str
+    name: str = Field(min_length=1, max_length=100)
+    company: str | None = Field(default=None, max_length=150)
+    email: EmailStr
+    message: str = Field(min_length=1, max_length=5000)
+
+
+class ContactResponse(BaseModel):
     message: str
+    status: str
 
 
+class HealthResponse(BaseModel):
+    status: str
 
-@app.get("/api/health")
+
+@app.get("/api/health", response_model=HealthResponse, tags=["system"])
 def health():
-    return {"status": "ok"}
+    return HealthResponse(status="ok")
 
 
-@app.post("/api/contact")
+@app.post("/api/contact", response_model=ContactResponse, tags=["contact"])
 def contact(form: ContactForm):
     try:
         with engine.begin() as conn:
             conn.execute(
                 Contact.__table__.insert().values(
-                    name=form.name,
-                    company=form.company,
+                    name=form.name.strip(),
+                    company=(form.company or "").strip() or None,
                     email=form.email,
-                    message=form.message,
+                    message=form.message.strip(),
                 )
             )
-    except Exception as exc:
-        print(f"DB error: {exc}")
-        return {"message": "Error saving to database", "status": "error"}
+    except Exception:
+        logger.exception("Failed to save contact message")
+        raise HTTPException(status_code=500, detail="Error saving to database")
 
-    print(f"Successfully saved message from {form.name} to PostgreSQL")
-    return {"message": "Success", "status": "ok"}
+    logger.info("Contact message saved from %s", form.email)
+    return ContactResponse(message="Success", status="ok")
 
 
 if __name__ == "__main__":
