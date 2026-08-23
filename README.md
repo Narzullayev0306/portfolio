@@ -8,6 +8,10 @@
   <a href="mailto:narzullevislom21@gmail.com">Email</a>
 </p>
 
+<p align="center">
+  <img src="https://image.thum.io/get/width/1400/fullpage/https://portfolio-six-phi-7ekaz47rl0.vercel.app" alt="Islom Narzullayev portfolio preview" width="100%" />
+</p>
+
 > A production-oriented personal portfolio built to showcase full-stack development, backend engineering, and practical AI integration.
 
 ## 👋 About
