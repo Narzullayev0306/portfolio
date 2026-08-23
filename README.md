@@ -1,90 +1,156 @@
-# Islom Narzullayev — Portfolio
+# Islom Narzullayev — Full-Stack Developer
 
-Modern, responsive personal portfolio website for **Islom Narzullayev** — Full-Stack Developer specializing in backend systems and AI integration.
+<p align="left">
+  <a href="https://portfolio-six-phi-7ekaz47rl0.vercel.app"><strong>🌐 Live Portfolio</strong></a>
+  ·
+  <a href="https://github.com/Narzullayev0306">GitHub</a>
+  ·
+  <a href="mailto:narzullevislom21@gmail.com">Email</a>
+</p>
 
-**Live Demo → [portfolio-six-phi.vercel.app](https://portfolio-six-phi-7ekaz47rl0.vercel.app)**
+> A production-oriented personal portfolio built to showcase full-stack development, backend engineering, and practical AI integration.
 
-## Features
+## 👋 About
 
-- **Dark / Light mode** with system-preference detection and localStorage persistence
-- **Fully responsive** — tested from 320px phones to ultrawide desktops, hamburger navigation on mobile
-- **Interactive project showcase** — browser-style previews and expandable case studies per project
-- **Scroll-reveal animations** with full `prefers-reduced-motion` support
-- **Accessible** — semantic landmarks, skip link, keyboard-friendly menu, ARIA states
-- **Working contact form** backed by a FastAPI service and PostgreSQL (Supabase)
-- **SEO ready** — meta tags, Open Graph / Twitter cards, favicon
+I'm **Islom Narzullayev**, a Full-Stack Developer focused on building reliable web applications and backend systems.
 
-## Tech Stack
+My current stack centers around **React, FastAPI, Python, PostgreSQL, and modern web tooling**, with an interest in integrating AI capabilities into useful products.
 
-| Layer | Tools |
-|---|---|
-| Frontend | React 19, Vite 8, plain CSS (custom design system) |
+- 💻 Full-stack web development
+- ⚙️ Backend APIs and database-driven systems
+- 🤖 AI integration and automation
+- 📱 Responsive, accessible user interfaces
+- 🚀 Deployment and production-oriented workflows
+- 🌍 Open to remote opportunities and relocation
+
+## 🚀 Highlights
+
+- **Responsive UI** — designed for mobile, desktop, and ultrawide layouts
+- **Accessible UX** — semantic HTML, keyboard-friendly interactions, ARIA states, skip navigation, and reduced-motion support
+- **Theme system** — dark/light mode with system preference detection and persistence
+- **Interactive projects** — browser-style previews and expandable case studies
+- **Working contact flow** — React frontend → FastAPI API → PostgreSQL/Supabase
+- **SEO foundations** — metadata, Open Graph/Twitter cards, favicon, and structured page content
+- **Component-based React architecture** — page sections are separated into reusable components
+
+## 🛠️ Tech Stack
+
+| Area | Technologies |
+| --- | --- |
+| Frontend | React 19, Vite 8, JavaScript, CSS |
 | Backend | Python, FastAPI |
-| Database | PostgreSQL (Supabase), SQLAlchemy |
-| Deployment | Vercel (frontend + serverless backend) |
+| Database | PostgreSQL, Supabase, SQLAlchemy |
+| Tooling | ESLint, Git, GitHub |
+| Deployment | Vercel |
 
-## Project Structure
+## 🏗️ Architecture
 
-```
-├── frontend/               # React SPA (Vite)
-│   ├── public/             # Static assets (profile photos, favicon)
+```text
+portfolio/
+├── frontend/                 # React + Vite application
+│   ├── public/               # Static assets
 │   └── src/
-│       ├── components/     # One component per page section
-│       │   ├── Navbar.jsx      # Nav + mobile menu + theme toggle
-│       │   ├── Hero.jsx
-│       │   ├── About.jsx
-│       │   ├── Skills.jsx
-│       │   ├── Projects.jsx    # Showcase cards + case studies
-│       │   ├── Experience.jsx
-│       │   ├── GithubSection.jsx
-│       │   ├── Goals.jsx
-│       │   ├── Contact.jsx     # Contact form
-│       │   └── Footer.jsx
-│       ├── data/
-│       │   ├── site.js         # Nav links, skills, social links
-│       │   └── projects.js     # Project content & case studies
-│       ├── styles/             # CSS organized by concern, imported in order
-│       │   ├── variables.css   # Design tokens (colors, spacing, fonts)
-│       │   ├── base.css        # Reset, global focus, skip link
-│       │   ├── navbar.css
-│       │   ├── hero.css
-│       │   ├── sections.css
-│       │   └── responsive.css  # Media queries + reduced motion
-│       ├── App.jsx             # Composition + theme + scroll logic
-│       └── main.jsx            # Entry point
-├── backend/                # FastAPI service
-│   ├── main.py                 # API entrypoint (/api/contact)
-│   └── database.py             # SQLAlchemy models (Supabase)
-└── vercel.json             # Monorepo deploy config
+│       ├── components/       # Page sections and UI components
+│       ├── data/             # Navigation, skills, project content
+│       ├── styles/            # Design system and responsive CSS
+│       ├── App.jsx            # Application composition and UI state
+│       └── main.jsx           # Application entry point
+│
+├── backend/                  # FastAPI service
+│   ├── main.py               # API entry point
+│   └── database.py           # Database configuration/models
+│
+└── vercel.json               # Deployment configuration
 ```
 
-## Getting Started
+## 🔄 Contact Form Flow
+
+```text
+User
+  ↓
+React Contact Form
+  ↓
+FastAPI /api/contact
+  ↓
+SQLAlchemy
+  ↓
+PostgreSQL (Supabase)
+```
+
+The frontend and backend are separated so the UI can evolve independently from the API and persistence layer.
+
+## ♿ Accessibility & UX
+
+Accessibility is treated as part of the implementation rather than an afterthought:
+
+- Semantic landmarks and headings
+- Skip-to-content navigation
+- Keyboard-friendly mobile navigation
+- ARIA state attributes where needed
+- Visible focus states
+- `prefers-reduced-motion` support
+- Responsive layout from small mobile screens to large displays
+
+## 📁 Project Structure
+
+The frontend is intentionally organized by responsibility:
+
+- `components/` — UI and page sections
+- `data/` — content/configuration separated from presentation
+- `styles/` — design tokens, base styles, section styles, and responsive rules
+- `backend/` — API and database layer
+
+## ⚡ Run Locally
+
+### 1. Clone
 
 ```bash
-# 1. Frontend
+git clone https://github.com/Narzullayev0306/portfolio.git
+cd portfolio
+```
+
+### 2. Start the frontend
+
+```bash
 cd frontend
 npm install
-npm run dev          # http://localhost:5173
+npm run dev
+```
 
-# 2. Backend (optional — needed only for the contact form)
+The Vite development server runs at `http://localhost:5173` by default.
+
+### 3. Start the backend
+
+The backend is only required for the contact form/API flow.
+
+```bash
 cd ../backend
 pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-Environment variable for the backend:
+Set the database connection before starting the API:
 
-```
-DATABASE_URL=postgresql://...   # Supabase connection string
+```env
+DATABASE_URL=postgresql://...
 ```
 
-## Author
+## 🌐 Deployment
+
+The project is configured for **Vercel** deployment. The repository uses a monorepo-style structure with the React frontend and FastAPI backend organized under separate directories.
+
+**Live:** https://portfolio-six-phi-7ekaz47rl0.vercel.app
+
+## 📬 Contact
 
 **Islom Narzullayev**
 
-- Portfolio: [portfolio-six-phi.vercel.app](https://portfolio-six-phi-7ekaz47rl0.vercel.app)
-- GitHub: [@Narzullayev0306](https://github.com/Narzullayev0306)
-- Telegram: [@Name_N_I_N](https://t.me/Name_N_I_N)
-- Email: narzullayevislom21@gmail.com
+- 🌐 Portfolio: https://portfolio-six-phi-7ekaz47rl0.vercel.app
+- 💻 GitHub: https://github.com/Narzullayev0306
+- Telegram: https://t.me/Name_N_I_N
+- ✉️ Email: narzullevislom21@gmail.com
+- 📍 Tashkent, Uzbekistan
 
-Tashkent, Uzbekistan · Open to remote work and relocation.
+---
+
+If you're interested in collaboration, freelance work, or full-time opportunities, feel free to reach out.
