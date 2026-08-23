@@ -1,24 +1,30 @@
-import httpx
+import os
+from contextlib import asynccontextmanager
+
+from database import Contact, engine, init_db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-app = FastAPI()
 
-import os
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Cold start'da jadvallarni yaratish (idempotent)
+    init_db()
+    yield
 
-# Supabase Credentials
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-# Add CORS middleware to allow requests from the React frontend
+app = FastAPI(title="Portfolio API", lifespan=lifespan)
+
+# CORS: frontend boshqa domenda bo'lsa ham ishlashi uchun
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allow all for development
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 class ContactForm(BaseModel):
     name: str
@@ -26,33 +32,34 @@ class ContactForm(BaseModel):
     email: str
     message: str
 
-@app.post("/api/contact")
-async def contact(form: ContactForm):
-    # Save to Supabase
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            f"{SUPABASE_URL}/rest/v1/contacts",
-            headers={
-                "apikey": SUPABASE_KEY,
-                "Authorization": f"Bearer {SUPABASE_KEY}",
-                "Content-Type": "application/json",
-                "Prefer": "return=minimal"
-            },
-            json={
-                "name": form.name,
-                "company": form.company,
-                "email": form.email,
-                "message": form.message
-            }
-        )
-        
-        if response.status_code >= 400:
-            print(f"Error saving to Supabase: {response.text}")
-            return {"message": "Error saving to database", "status": "error"}
 
-    print(f"Successfully saved message from {form.name} to Supabase")
+
+@app.get("/api/health")
+def health():
+    return {"status": "ok"}
+
+
+@app.post("/api/contact")
+def contact(form: ContactForm):
+    try:
+        with engine.begin() as conn:
+            conn.execute(
+                Contact.__table__.insert().values(
+                    name=form.name,
+                    company=form.company,
+                    email=form.email,
+                    message=form.message,
+                )
+            )
+    except Exception as exc:
+        print(f"DB error: {exc}")
+        return {"message": "Error saving to database", "status": "error"}
+
+    print(f"Successfully saved message from {form.name} to PostgreSQL")
     return {"message": "Success", "status": "ok"}
+
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
